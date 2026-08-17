@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Siswa - Admin Rumah Koding{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-12 w-full">
+    
+    <!-- Header Admin -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">👥 Rekap Progres & Daftar Siswa</h1>
+            <p class="text-slate-400 text-sm md:text-base">Kelola akun siswa dan pantau perkembangan belajar mereka.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/admin/users/tambah" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5">
+                + Tambah Siswa
+            </a>
+            <a href="/admin" class="px-5 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold text-sm rounded-xl transition-all">
+                &larr; Kembali ke Studio
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabel Data Siswa -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-900/80 border-b border-slate-700/50 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+                        <th class="py-4 px-6">Username Siswa</th>
+                        <th class="py-4 px-6">Modul Selesai</th>
+                        <th class="py-4 px-6 w-1/3">Persentase Progres</th>
+                        <th class="py-4 px-6 text-right">Aksi Manajemen</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for siswa in daftar_siswa %}
+                    {% set pct = (siswa.modul_selesai / siswa.total_modul * 100) | round(0) if siswa.total_modul > 0 else 0 %}
+                    <tr class="hover:bg-slate-800/40 transition-colors group">
+                        
+                        <td class="py-4 px-6">
+                            <span class="font-bold text-white text-base">{{ siswa.username }}</span>
+                        </td>
+                        
+                        <td class="py-4 px-6 text-slate-300 font-medium">
+                            {{ siswa.modul_selesai }} <span class="text-slate-500 text-xs">/ {{ siswa.total_modul }} Modul</span>
+                        </td>
+                        
+                        <td class="py-4 px-6">
+                            <div class="flex justify-between text-xs font-semibold mb-1.5">
+                                <span class="text-slate-400">Penyelesaian</span>
+                                <span class="text-emerald-400">{{ pct }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-2.5 border border-slate-700/50 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-500 to-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ pct }}%;"></div>
+                            </div>
+                        </td>
+                        
+                        <td class="py-4 px-6 text-right space-x-2">
+                            <a href="/admin/users/edit/{{ siswa.id }}" class="inline-flex items-center px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-lg border border-blue-500/20 transition-all">
+                                Edit
+                            </a>
+                            <a href="/admin/users/hapus/{{ siswa.id }}" onclick="return confirm('Yakin ingin menghapus siswa ini beserta seluruh progres belajarnya?')" class="inline-flex items-center px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg border border-rose-500/20 transition-all">
+                                Hapus
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="py-16 text-center text-slate-500 text-sm italic">
+                            Belum ada siswa yang terdaftar di platform.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

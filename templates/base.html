@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}Rumah Koding{% endblock %}</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (via CDN untuk akses cepat) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Konfigurasi Tema Tailwind Kustom -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        slate: { 850: '#151e2e', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- CSS Kustom Eksternal dengan Cache-Busting -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v={{ range(1, 10000) | random }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Navbar Global -->
+    <header class="glass-nav sticky top-0 z-50 w-full transition-all duration-300">
+        <div class="w-full px-8 h-16 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-all duration-300">
+                    &gt;_
+                </div>
+                <span class="text-lg font-bold tracking-tight text-white">
+                    Rumah<span class="text-cyan-400">Koding</span>
+                </span>
+            </a>
+
+            <!-- Menu Navigasi -->
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="/" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Beranda</a>
+                
+                {% if session.get('user_id') %}
+                    {% if session.get('role') == 'admin' %}
+                        <a href="/admin" class="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">Studio Admin</a>
+                        <a href="/admin/users" class="text-sm font-medium bg-slate-800 text-slate-300 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700 hover:text-white transition-all">👥 Data Siswa</a>
+                        <!-- 🛠️ DIPERBAIKI: Menggunakan ukuran tombol kecil agar sejajar rapi di navbar -->
+                        <a href="/admin/automation" class="text-xs font-semibold bg-cyan-600/20 text-cyan-400 border border-cyan-500/40 px-3 py-1.5 rounded-lg hover:bg-cyan-600 hover:text-white transition-all">🤖 Automation Studio</a>
+                    {% elif session.get('role') == 'student' %}
+                        <a href="/belajar" class="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors">Ruang Belajar</a>
+                        <a href="/dashboard" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Dashboard</a>
+                        <a href="/leaderboard" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors">Peringkat</a>
+                    {% endif %}
+                    
+                    <a href="/profil" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Profil</a> 
+                    
+                    <div class="h-4 w-px bg-slate-700"></div> <!-- Pembatas -->
+                    
+                    <span class="text-sm font-medium text-slate-400 flex items-center gap-2 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        {{ session.get('username', 'User') }}
+                    </span>
+                    <a href="/logout" class="text-sm font-medium text-rose-400 hover:text-rose-300 transition-colors">Keluar</a>
+                {% else %}
+                    <a href="/login" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Masuk</a>
+                    <a href="/register" class="text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md shadow-blue-500/20 transition-all">Daftar Akun</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="flex-1 flex flex-col relative">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox Form Lanjutan - Rumah Koding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 flex items-center justify-center h-screen m-0">
+    <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl w-96">
+        <h2 class="text-xl font-bold mb-4 text-cyan-400">Form Pendaftaran Paket</h2>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Pilih Paket Belajar</label>
+                <select id="dropdown-input" class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-cyan-500">
+                    <option value="">-- Pilih Opsi --</option>
+                    <option value="basic">Paket Basic</option>
+                    <option value="pro">Paket Pro Expert</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="flex items-center gap-3 text-sm cursor-pointer">
+                    <input type="checkbox" id="checkbox-input" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-0">
+                    <span>Setuju dengan Syarat & Ketentuan</span>
+                </label>
+            </div>
+
+            <button id="submit-btn-2" onclick="handleSubmit()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-all">
+                Kirim Pendaftaran
+            </button>
+
+            <div id="welcome-message" class="hidden p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-xl text-center">
+                🎉 Berhasil Mendaftar Paket Pro!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleSubmit() {
+            const dropdown = document.getElementById('dropdown-input').value;
+            const checkbox = document.getElementById('checkbox-input').checked;
+            const msg = document.getElementById('welcome-message');
+
+            // UBAH DI SINI: Asal dropdown tidak kosong (sudah dipilih) dan checkbox dicentang
+            if (dropdown !== "" && checkbox) {
+                msg.classList.remove('hidden');
+                msg.innerText = "🎉 Berhasil Mendaftar Paket (" + dropdown.toUpperCase() + ")!";
+            } else {
+                alert('Pastikan sudah memilih salah satu paket dan mencentang syarat ketentuan!');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Katalog Lab Otomasi - Rumah Koding{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-12 w-full">
+    
+    <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">🤖 Lab Web Automation (Playwright)</h1>
+            <p class="text-slate-400 text-sm">Pelajari cara mengotomasi interaksi browser, mengisi form, dan memvalidasi elemen web secara interaktif.</p>
+        </div>
+        <a href="/belajar" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl border border-slate-700 transition-all">
+            &larr; Kembali ke Kursus Reguler
+        </a>
+    </div>
+
+    <!-- Grid Daftar Modul -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for item in daftar_modul %}
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 flex flex-col hover:border-cyan-500/50 transition-all duration-300 shadow-xl">
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Modul {{ item.modul_ke }}</span>
+                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' if item.status == 'selesai' else 'bg-slate-700/50 text-slate-400 border border-slate-600' }}">
+                    {{ item.status | replace('_', ' ') }}
+                </span>
+            </div>
+            
+            <h3 class="text-xl font-bold text-white mb-2">{{ item.judul }}</h3>
+            <p class="text-xs text-slate-400 mb-6">Praktik langsung mengotomasi form target menggunakan perintah Playwright.</p>
+
+            <a href="/automation/{{ item.modul_ke }}" class="mt-auto block w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-center font-semibold text-sm rounded-xl transition-all shadow-md shadow-blue-500/20">
+                Mulai Latihan &rarr;
+            </a>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-slate-800/40 border border-slate-700/50 border-dashed rounded-2xl p-12 text-center">
+            <p class="text-slate-400 text-sm">Belum ada modul Web Automation yang tersedia saat ini.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

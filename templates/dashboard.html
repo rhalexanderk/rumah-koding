@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Siswa - Rumah Koding{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-12 w-full">
+    
+    <!-- Header Welcome -->
+    <div class="bg-gradient-to-r from-blue-900 to-slate-900 border border-blue-500/30 rounded-3xl p-8 mb-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white mb-2">Halo, {{ user.username }}! 👋</h1>
+            <p class="text-slate-300 text-sm">Selamat datang kembali di pusat kendali belajarmu. Terus tingkatkan kemampuan kodingmu hari ini.</p>
+        </div>
+        <div class="shrink-0">
+            <a href="/belajar" class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                Pilih Modul Belajar &rarr;
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Kartu 1: Overall Progress -->
+        <div class="col-span-1 md:col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 flex flex-col justify-center">
+            <h3 class="text-lg font-bold text-white mb-1">Total Progres Belajar</h3>
+            <p class="text-xs text-slate-400 mb-6">Pencapaian dari seluruh bahasa pemrograman & lab otomasi.</p>
+            
+            <div class="flex items-end justify-between mb-2">
+                <span class="text-3xl font-extrabold text-cyan-400">{{ overall_pct }}%</span>
+                <span class="text-sm font-semibold text-slate-400">{{ total_selesai }} dari {{ total_modul }} Modul Selesai</span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-4 overflow-hidden border border-slate-700">
+                <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-4 rounded-full transition-all duration-1000 ease-out relative" style="width: {{ overall_pct }}%;">
+                    <!-- Animasi kilau pada progress bar -->
+                    <div class="absolute top-0 left-0 right-0 bottom-0 bg-white/20 w-full animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kartu 2: Pintasan & Info -->
+        <div class="col-span-1 bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 flex flex-col gap-4">
+            <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">Navigasi Cepat</h3>
+            
+            <a href="/leaderboard" class="flex items-center p-3 bg-slate-900 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all group">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl mr-3 group-hover:scale-110 transition-transform">🏆</div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">Papan Peringkat</h4>
+                    <p class="text-[10px] text-slate-400">Lihat posisimu saat ini</p>
+                </div>
+            </a>
+
+            <a href="/profil" class="flex items-center p-3 bg-slate-900 border border-slate-700 rounded-xl hover:border-purple-500/50 hover:bg-slate-800 transition-all group">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center text-xl mr-3 group-hover:scale-110 transition-transform">👤</div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">Pengaturan Profil</h4>
+                    <p class="text-[10px] text-slate-400">Ubah password & data</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

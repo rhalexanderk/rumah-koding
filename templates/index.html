@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Rumah Koding - Platform Belajar Koding Interaktif{% endblock %}
+
+{% block content %}
+<!-- Latar Belakang Cahaya Subtil (Glow) -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+
+<div class="max-w-5xl mx-auto px-6 pt-32 pb-20 text-center">
+    
+    <!-- Hero Section -->
+    <div class="space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-4">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Platform Generasi Baru
+        </div>
+        
+        <h1 class="text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">
+            Kuasai Bahasa Pemrograman di <br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                Rumah Koding
+            </span>
+        </h1>
+        
+        <p class="mt-6 text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Platform interaktif tanpa setup. Tulis kode lintas bahasa langsung di browser, uji logika secara instan, dan pantau progres belajarmu secara otomatis.
+        </p>
+        
+        <div class="pt-8 flex flex-wrap items-center justify-center gap-4">
+            {% if session.get('user_id') %}
+                {% if session.get('role') == 'admin' %}
+                    <a href="/admin" class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+                        Buka Studio Admin &rarr;
+                    </a>
+                {% else %}
+                    <a href="/belajar" class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+                        Lanjutkan Belajar &rarr;
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="/register" class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+                    Mulai Belajar Gratis
+                </a>
+                <a href="/login" class="px-8 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700 transition-all">
+                    Masuk ke Akun
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Feature Section -->
+<div class="max-w-6xl mx-auto px-6 py-20">
+    <div class="grid md:grid-cols-3 gap-6">
+        
+        <!-- Card 1 -->
+        <div class="p-8 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:bg-slate-800 transition-all duration-300 group">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🌐</div>
+            <h3 class="text-xl font-bold text-white mb-3">Multi-Bahasa</h3>
+            <p class="text-slate-400 leading-relaxed text-sm">
+                Mendukung Python, Java, C++, dan JavaScript dalam satu platform terpadu. Arsitektur yang fleksibel siap menampung bahasa baru kapan saja.
+            </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-8 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:bg-slate-800 transition-all duration-300 group">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">💻</div>
+            <h3 class="text-xl font-bold text-white mb-3">Live Editor Cerdas</h3>
+            <p class="text-slate-400 leading-relaxed text-sm">
+                Dilengkapi CodeMirror untuk deteksi sintaks otomatis, pewarnaan kode, dan pengalaman menulis kode semulus menggunakan IDE profesional.
+            </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="p-8 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:bg-slate-800 transition-all duration-300 group">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">📊</div>
+            <h3 class="text-xl font-bold text-white mb-3">Sistem Progresif</h3>
+            <p class="text-slate-400 leading-relaxed text-sm">
+                Platform mencatat riwayat belajarmu secara real-time. Capai targetmu, selesaikan modul, dan bersainglah di papan peringkat global kami.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="mt-auto border-t border-slate-800/80 bg-slate-900/50">
+    <div class="max-w-6xl mx-auto px-6 py-8 text-center text-slate-500 text-sm font-medium">
+        &copy; 2026 Rumah Koding. Mengubah logika menjadi karya nyata.
+    </div>
+</footer>
+{% endblock %}

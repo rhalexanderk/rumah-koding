@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}{{ materi.judul }} - Rumah Koding{% endblock %}
+
+{% block extra_head %}
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+
+<style>
+    /* Mengamankan layout IDE agar tidak scroll ganda */
+    body { overflow: hidden; }
+    
+    /* CodeMirror Override agar memenuhi ruang vertikal penuh */
+    .CodeMirror { height: 100% !important; font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; background: transparent; }
+    
+    /* Custom Styling untuk formatting teks instruksi HTML dari database */
+    .content-materi h2 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1rem; }
+    .content-materi p { margin-bottom: 1rem; line-height: 1.7; color: #334155; font-size: 14.5px; }
+    .content-materi code { background-color: #f1f5f9; color: #0f172a; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem; border: 1px solid #e2e8f0; }
+    .content-materi pre { background-color: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; font-family: monospace; font-size: 0.875rem; }
+    .content-materi pre code { background: none; color: inherit; padding: 0; border: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-5rem)] w-full bg-slate-900">
+    
+    <!-- Sub-Toolbar Atas -->
+    <div class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50 px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex gap-3">
+            <button id="btn-jalankan" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/20 transition-all">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                Jalankan Kode
+            </button>
+            <button id="btn-reset" class="flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Reset
+            </button>
+            
+            <!-- Tombol 'Selanjutnya' Disembunyikan Default -->
+            <button id="btn-berikutnya" data-next="{{ next_modul_ke if next_modul_ke else 'None' }}" disabled 
+                    class="items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-emerald-500/20 transition-all hidden">
+                Selanjutnya &rarr;
+            </button>
+        </div>
+        
+        <div class="flex items-center">
+            <span class="px-4 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-xs font-bold text-slate-300 uppercase tracking-widest">
+                {{ materi.bahasa }}
+            </span>
+        </div>
+    </div>
+
+    <!-- IDE Split Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Panel Kiri: Instruksi Materi -->
+        <div class="w-[450px] lg:w-[500px] shrink-0 bg-white overflow-y-auto flex flex-col border-r border-slate-200">
+            <div class="p-8 pb-20">
+                
+                <!-- Navigasi Internal Panel -->
+                <div class="flex justify-between items-center mb-8">
+                    <a href="/belajar" class="text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors">
+                        &larr; Kembali
+                    </a>
+                    
+                    <!-- Dropdown Unit (Tailwind Logic) -->
+                    <div class="relative">
+                        <button id="btn-unit-toggle" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors">
+                            Daftar Unit <span class="text-[10px]">&#9660;</span>
+                        </button>
+                        <div id="unit-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 py-2 max-h-80 overflow-y-auto">
+                            {% for item in daftar_materi %}
+                            <a href="{{ url_for('tampilkan_materi', bahasa=materi.bahasa, modul_ke=item.modul_ke) }}" 
+                               class="flex items-center justify-between px-5 py-3 text-sm hover:bg-slate-50 transition-colors {% if item.modul_ke == materi.modul_ke %}bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600{% else %}text-slate-600 border-l-4 border-transparent{% endif %}">
+                                <span>Modul {{ item.modul_ke }}: {{ item.judul }}</span>
+                                {% if item.status == 'selesai' %}
+                                <span class="text-emerald-500 font-bold text-lg">&check;</span>
+                                {% endif %}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Area Konten (Rendered HTML) -->
+                <div class="content-materi mb-8">
+                    <h2>{{ materi.judul }}</h2>
+                    {{ materi.penjelasan | safe }}
+                </div>
+
+                <!-- Task Box Instruksi -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-emerald-900 text-sm leading-relaxed shadow-sm">
+                    <div class="flex items-center gap-2 font-bold text-emerald-700 uppercase tracking-wide text-xs mb-3">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        Instruksi Tugas
+                    </div>
+                    <div class="content-materi">
+                        {{ materi.instruksi | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Kanan: Workspace (CodeMirror + Terminal) -->
+        <div class="flex-1 flex flex-col bg-[#1e1e24] min-w-0">
+            
+            <!-- Editor Tab Atas -->
+            <div class="flex-1 flex flex-col min-h-0">
+                <div class="bg-[#121824] px-4 pt-3 flex border-b border-[#334155]">
+                    <div class="bg-[#1e1e24] text-blue-400 text-xs font-bold px-5 py-2.5 rounded-t-lg border-t border-x border-[#334155] tracking-wide flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        script.{{ materi.bahasa[:2] if materi.bahasa == 'python' else 'txt' }}
+                    </div>
+                </div>
+                
+                <!-- Area Teks CodeMirror -->
+                <div class="flex-1 overflow-hidden relative">
+                    <textarea id="kode-editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Terminal Output Server -->
+            <div class="h-1/3 min-h-[220px] flex flex-col bg-[#0b1120] border-t border-slate-700">
+                <div class="bg-slate-900/80 px-5 py-2.5 border-b border-slate-800 flex justify-between items-center shrink-0">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Terminal Output
+                    </span>
+                    <span class="text-[10px] text-slate-600 font-medium">Rumah Koding Server &bull; Menunggu Perintah</span>
+                </div>
+                <div id="console-output" class="flex-1 p-5 font-mono text-[13px] text-slate-500 overflow-y-auto whitespace-pre-wrap leading-relaxed">Tekan 'Jalankan Kode' untuk melihat hasil eksekusi program di sini...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Toggle Menu Modul
+    const btnUnitToggle = document.getElementById("btn-unit-toggle");
+    const unitDropdownMenu = document.getElementById("unit-dropdown-menu");
+
+    btnUnitToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        unitDropdownMenu.classList.toggle("hidden");
+    });
+
+    window.addEventListener("click", () => {
+        if (!unitDropdownMenu.classList.contains("hidden")) {
+            unitDropdownMenu.classList.add("hidden");
+        }
+    });
+
+    // Inisialisasi Editor CodeMirror
+    let langMode = "python";
+    const bahasaModul = "{{ materi.bahasa | lower }}";
+    if (bahasaModul === "java" || bahasaModul === "cpp") { langMode = "text/x-java"; } 
+    else if (bahasaModul === "javascript") { langMode = "javascript"; }
+
+    const editor = CodeMirror.fromTextArea(document.getElementById("kode-editor"), {
+        mode: langMode, theme: "dracula", lineNumbers: true, indentUnit: 4, lineWrapping: true
+    });
+    
+    const kodeAwalAsli = `{{ materi.kode_awal | safe }}`;
+    editor.setValue(kodeAwalAsli);
+
+    const consoleOutput = document.getElementById("console-output");
+    const btnJalankan = document.getElementById("btn-jalankan");
+    const btnReset = document.getElementById("btn-reset");
+    const btnBerikutnya = document.getElementById("btn-berikutnya");
+
+    // Aksi Reset Kode
+    btnReset.addEventListener("click", () => {
+        editor.setValue(kodeAwalAsli);
+        consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-slate-500 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+        consoleOutput.innerText = "Editor dikembalikan ke template kode awal.";
+        btnBerikutnya.disabled = true;
+        btnBerikutnya.classList.replace("flex", "hidden");
+    });
+
+    // Aksi Menjalankan Kode (AJAX Fetch API)
+    btnJalankan.addEventListener("click", async () => {
+        consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-blue-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+        consoleOutput.innerText = "Mengeksekusi kode secara aman di server...";
+        btnJalankan.disabled = true;
+        btnJalankan.classList.add("opacity-50", "cursor-wait");
+
+        try {
+            // AMBIL TOKEN CSRF DARI META TAG HTML
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const response = await fetch('/belajar/jalankan', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken  // <-- TAMBAHKAN INI AGAR TIDAK DIBLOKIR CSRF
+                },
+                body: JSON.stringify({ kode: editor.getValue(), materi_id: {{ materi.id }} })
+            });
+
+            const hasil = await response.json();
+
+            if (hasil.status === 'error') {
+                consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+                consoleOutput.innerText = "⚠️ Error Eksekusi:\n\n" + hasil.pesan;
+                btnBerikutnya.disabled = true;
+                btnBerikutnya.classList.replace("flex", "hidden");
+            } else {
+                consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-emerald-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+                consoleOutput.innerText = hasil.pesan;
+                
+                if (hasil.benar) {
+                    consoleOutput.innerText += "\n\n✅ LOGIKA BENAR! Output sesuai dengan kunci jawaban. Progres telah disimpan.";
+                    btnBerikutnya.disabled = false;
+                    btnBerikutnya.classList.replace("hidden", "flex");
+                } else {
+                    consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-amber-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+                    consoleOutput.innerText += "\n\n❌ SALAH: Output yang dihasilkan belum sesuai dengan target jawaban. Coba periksa kembali kodemu.";
+                    btnBerikutnya.disabled = true;
+                    btnBerikutnya.classList.replace("flex", "hidden");
+                }
+            }
+        } catch (err) {
+            consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+            consoleOutput.innerText = "⚠️ Gangguan Koneksi: Gagal terhubung ke server eksekusi.";
+        } finally {
+            btnJalankan.disabled = false;
+            btnJalankan.classList.remove("opacity-50", "cursor-wait");
+        }
+    });
+
+    // Navigasi ke Modul Lanjut
+    btnBerikutnya.addEventListener("click", () => {
+        const nextModul = btnBerikutnya.getAttribute("data-next");
+        if (nextModul && nextModul !== "None") {
+            window.location.href = `/belajar/{{ materi.bahasa }}/${nextModul}`;
+        } else {
+            alert("🎉 SELAMAT! Anda telah menamatkan seluruh unit pada kursus ini.");
+            window.location.href = "/belajar";
+        }
+    });
+</script>
+{% endblock %}

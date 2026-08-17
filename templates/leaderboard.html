@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Papan Peringkat - Rumah Koding{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-12 w-full">
+    
+    <div class="text-center mb-10">
+        <h1 class="text-3xl font-extrabold text-white tracking-tight mb-3 flex items-center justify-center gap-3">
+            <span class="text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]">🏆</span> Papan Peringkat
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base">
+            Siswa terajin yang paling banyak menyelesaikan modul pembelajaran di Rumah Koding.
+        </p>
+    </div>
+
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-900/80 border-b border-slate-700/50 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+                        <th class="py-4 px-6 w-24 text-center">Peringkat</th>
+                        <th class="py-4 px-6">Username Siswa</th>
+                        <th class="py-4 px-6 text-right">Modul Tuntas</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for row in leaderboard_data %}
+                    <tr class="hover:bg-slate-800/40 transition-colors group">
+                        
+                        <!-- Kolom Peringkat -->
+                        <td class="py-4 px-6 text-center">
+                            {% if loop.index == 1 %}
+                                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 text-amber-950 font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] transform group-hover:scale-110 transition-transform">1</div>
+                            {% elif loop.index == 2 %}
+                                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900 font-bold text-sm shadow-[0_0_10px_rgba(148,163,184,0.3)] transform group-hover:scale-110 transition-transform">2</div>
+                            {% elif loop.index == 3 %}
+                                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white font-bold text-sm shadow-[0_0_10px_rgba(234,88,12,0.3)] transform group-hover:scale-110 transition-transform">3</div>
+                            {% else %}
+                                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-800 text-slate-400 font-medium text-sm border border-slate-700">
+                                    {{ loop.index }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Kolom Username -->
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold text-white text-base">{{ row.username }}</span>
+                                {% if row.username == session.get('username') %}
+                                    <span class="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                                        Kamu
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Kolom Skor -->
+                        <td class="py-4 px-6 text-right">
+                            <div class="inline-flex items-center gap-1.5 font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+                                {{ row.total_selesai }} <span class="text-emerald-500/70 text-xs uppercase tracking-wider font-semibold">Modul</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="py-12 text-center text-slate-500 text-sm">
+                            Belum ada data peringkat siswa saat ini.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}{{ materi.judul }} - Lab Otomasi{% endblock %}
+
+{% block extra_head %}
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+
+<style>
+    /* Mengamankan layout IDE agar tidak scroll ganda */
+    body { overflow: hidden; }
+    
+    /* CodeMirror Override agar memenuhi ruang vertikal penuh */
+    .CodeMirror { height: 100% !important; font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; background: transparent; }
+    
+    /* Custom Styling untuk formatting teks instruksi HTML dari database */
+    .content-materi h2 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1rem; }
+    .content-materi p { margin-bottom: 1rem; line-height: 1.7; color: #334155; font-size: 14.5px; }
+    .content-materi code { background-color: #f1f5f9; color: #0f172a; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem; border: 1px solid #e2e8f0; }
+    .content-materi pre { background-color: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; font-family: monospace; font-size: 0.875rem; }
+    .content-materi pre code { background: none; color: inherit; padding: 0; border: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-5rem)] w-full bg-slate-900">
+    
+    <!-- Sub-Toolbar Atas -->
+    <div class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50 px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex gap-3">
+            <button id="btn-jalankan" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/20 transition-all">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                Jalankan Script Otomasi
+            </button>
+            <button id="btn-reset" class="flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Reset
+            </button>
+            
+            <!-- Tombol 'Selanjutnya' Disembunyikan Default, Terbuka Otomatis jika Selesai -->
+            <button id="btn-berikutnya" data-next="{{ next_modul_ke if next_modul_ke else 'None' }}" disabled 
+                    class="items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-emerald-500/20 transition-all hidden">
+                Selanjutnya &rarr;
+            </button>
+        </div>
+        
+        <div class="flex items-center">
+            <span class="px-4 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-xs font-bold text-cyan-400 uppercase tracking-widest">
+                Lab: Playwright Python
+            </span>
+        </div>
+    </div>
+
+    <!-- IDE 3-Panel Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Panel Kiri: Instruksi Materi -->
+        <div class="w-[400px] lg:w-[450px] shrink-0 bg-white overflow-y-auto flex flex-col border-r border-slate-200">
+            <div class="p-8 pb-20">
+                
+                <!-- Navigasi Internal Panel -->
+                <div class="flex justify-between items-center mb-8">
+                    <a href="/belajar" class="text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors">
+                        &larr; Kembali
+                    </a>
+                    
+                    <!-- Dropdown Unit (Tailwind Logic) -->
+                    <div class="relative">
+                        <button id="btn-unit-toggle" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors">
+                            Daftar Modul <span class="text-[10px]">&#9660;</span>
+                        </button>
+                        <div id="unit-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 py-2 max-h-80 overflow-y-auto">
+                            {% for item in daftar_materi %}
+                            <a href="{{ url_for('automation_lesson', modul_ke=item.modul_ke) }}" 
+                               class="flex items-center justify-between px-5 py-3 text-sm hover:bg-slate-50 transition-colors {% if item.modul_ke == materi.modul_ke %}bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600{% else %}text-slate-600 border-l-4 border-transparent{% endif %}">
+                                <span>Modul {{ item.modul_ke }}: {{ item.judul }}</span>
+                                {% if item.status == 'selesai' %}
+                                <span class="text-emerald-500 font-bold text-lg">&check;</span>
+                                {% endif %}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Area Konten (Rendered HTML) -->
+                <div class="content-materi mb-8">
+                    <h2>{{ materi.judul }}</h2>
+                    {{ materi.penjelasan | safe }}
+                </div>
+
+                <!-- Task Box Instruksi -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-emerald-900 text-sm leading-relaxed shadow-sm">
+                    <div class="flex items-center gap-2 font-bold text-emerald-700 uppercase tracking-wide text-xs mb-3">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        Instruksi Misi
+                    </div>
+                    <div class="content-materi">
+                        {{ materi.instruksi | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Tengah: Live Web Preview Iframe -->
+        <div class="w-[380px] lg:w-[420px] shrink-0 bg-slate-950 border-r border-slate-700 flex flex-col">
+            <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between shrink-0">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    🌐 Live Sandbox Preview
+                </span>
+                <button onclick="document.getElementById('sandbox-frame').src = document.getElementById('sandbox-frame').src" class="text-xs text-blue-400 hover:underline">Refresh</button>
+            </div>
+            <div class="flex-1 bg-white p-3 flex items-center justify-center">
+                <iframe id="sandbox-frame" src="{{ materi.target_url }}" class="w-full h-full border border-slate-200 rounded-lg shadow-md"></iframe>
+            </div>
+        </div>
+
+        <!-- Panel Kanan: Workspace (CodeMirror + Terminal) -->
+        <div class="flex-1 flex flex-col bg-[#1e1e24] min-w-0">
+            
+            <!-- Editor Tab Atas -->
+            <div class="flex-1 flex flex-col min-h-0">
+                <div class="bg-[#121824] px-4 pt-3 flex border-b border-[#334155]">
+                    <div class="bg-[#1e1e24] text-blue-400 text-xs font-bold px-5 py-2.5 rounded-t-lg border-t border-x border-[#334155] tracking-wide flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        script.py (Playwright)
+                    </div>
+                </div>
+                
+                <!-- Area Teks CodeMirror -->
+                <div class="flex-1 overflow-hidden relative">
+                    <textarea id="kode-editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Terminal Output Server -->
+            <div class="h-1/3 min-h-[200px] flex flex-col bg-[#0b1120] border-t border-slate-700">
+                <div class="bg-slate-900/80 px-5 py-2.5 border-b border-slate-800 flex justify-between items-center shrink-0">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Automation Terminal Result
+                    </span>
+                    <span class="text-[10px] text-slate-600 font-medium">Playwright Runner &bull; Menunggu Perintah</span>
+                </div>
+                <div id="console-output" class="flex-1 p-5 font-mono text-[13px] text-slate-500 overflow-y-auto whitespace-pre-wrap leading-relaxed">Tekan 'Jalankan Script Otomasi' untuk menguji skrip...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Toggle Menu Modul Dropdown
+    const btnUnitToggle = document.getElementById("btn-unit-toggle");
+    const unitDropdownMenu = document.getElementById("unit-dropdown-menu");
+
+    btnUnitToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        unitDropdownMenu.classList.toggle("hidden");
+    });
+
+    window.addEventListener("click", () => {
+        if (!unitDropdownMenu.classList.contains("hidden")) {
+            unitDropdownMenu.classList.add("hidden");
+        }
+    });
+
+    // Inisialisasi Editor CodeMirror
+    const editor = CodeMirror.fromTextArea(document.getElementById("kode-editor"), {
+        mode: "python", theme: "dracula", lineNumbers: true, indentUnit: 4, lineWrapping: true
+    });
+    
+    const kodeAwalAsli = `{{ materi.kode_awal | safe }}`;
+    editor.setValue(kodeAwalAsli);
+
+    const consoleOutput = document.getElementById("console-output");
+    const btnJalankan = document.getElementById("btn-jalankan");
+    const btnReset = document.getElementById("btn-reset");
+    const btnBerikutnya = document.getElementById("btn-berikutnya");
+
+    // Aksi Reset Kode
+    btnReset.addEventListener("click", () => {
+        editor.setValue(kodeAwalAsli);
+        consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-slate-500 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+        consoleOutput.innerText = "Editor dikembalikan ke template kode awal.";
+        btnBerikutnya.disabled = true;
+        btnBerikutnya.classList.replace("flex", "hidden");
+    });
+
+    // Aksi Menjalankan Skrip Otomasi (AJAX Fetch API)
+    btnJalankan.addEventListener("click", async () => {
+        consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-blue-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+        consoleOutput.innerText = "Menjalankan mesin Playwright di server (headless browser)...";
+        btnJalankan.disabled = true;
+        btnJalankan.classList.add("opacity-50", "cursor-wait");
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const response = await fetch('/automation/jalankan', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken 
+                },
+                body: JSON.stringify({ kode: editor.getValue(), materi_id: {{ materi.id }} })
+            });
+
+            const hasil = await response.json();
+
+            if (hasil.status === 'error') {
+                consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+                consoleOutput.innerText = "⚠️ Error Eksekusi:\n\n" + hasil.pesan;
+                btnBerikutnya.disabled = true;
+                btnBerikutnya.classList.replace("flex", "hidden");
+            } else {
+                consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-emerald-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+                consoleOutput.innerText = hasil.pesan;
+                
+                // JIKA VALIDASI PLAYWRIGHT DI BACKEND BERHASIL
+                if (hasil.berhasil) {
+                    runVisualSimulationInIframe();
+                    consoleOutput.innerText += "\n\n✅ OTOMASI BERHASIL! Elemen target terverifikasi. Progres telah disimpan.";
+                    
+                    // Buka kunci tombol Selanjutnya
+                    btnBerikutnya.disabled = false;
+                    btnBerikutnya.classList.replace("hidden", "flex");
+                } else {
+                    consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-amber-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+                    consoleOutput.innerText += "\n\n❌ BELUM BERHASIL: Elemen target belum muncul atau aksi belum lengkap.";
+                    btnBerikutnya.disabled = true;
+                    btnBerikutnya.classList.replace("flex", "hidden");
+                }
+            }
+        } catch (err) {
+            consoleOutput.className = "flex-1 p-5 font-mono text-[13px] text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed";
+            consoleOutput.innerText = "⚠️ Gangguan Koneksi: Gagal terhubung ke server eksekusi.";
+        } finally {
+            btnJalankan.disabled = false;
+            btnJalankan.classList.remove("opacity-50", "cursor-wait");
+        }
+    });
+
+    // Navigasi ke Modul Lanjut Otomasi
+    btnBerikutnya.addEventListener("click", () => {
+        const nextModul = btnBerikutnya.getAttribute("data-next");
+        if (nextModul && nextModul !== "None") {
+            window.location.href = `/automation/${nextModul}`;
+        } else {
+            alert("🎉 SELAMAT! Anda telah menamatkan seluruh unit Lab Web Automation ini.");
+            window.location.href = "/belajar";
+        }
+    });
+
+    // Fungsi simulasi visual interaktif di dalam iframe (Mendukung Modul 1 & Modul 2)
+    function runVisualSimulationInIframe() {
+        const iframe = document.getElementById('sandbox-frame');
+        const kodeSiswa = editor.getValue();
+
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            
+            // Elemen Modul 1 (Form Login)
+            const userInput = iframeDoc.getElementById('username-input');
+            const passInput = iframeDoc.getElementById('password-input');
+            const submitBtn = iframeDoc.getElementById('submit-btn');
+
+            // Elemen Modul 2 (Form Dropdown & Checkbox)
+            const dropdownInput = iframeDoc.getElementById('dropdown-input');
+            const checkboxInput = iframeDoc.getElementById('checkbox-input');
+            const submitBtn2 = iframeDoc.getElementById('submit-btn-2');
+
+            if (userInput && passInput && submitBtn) {
+                // --- SIMULASI MODUL 1 ---
+                const userMatch = kodeSiswa.match(/#username-input['",\s]+['"]([^'"]+)['"]/);
+                const passMatch = kodeSiswa.match(/#password-input['",\s]+['"]([^'"]+)['"]/);
+                const targetUser = userMatch ? userMatch[1] : 'admin';
+                const targetPass = passMatch ? passMatch[1] : '12345';
+
+                userInput.value = '';
+                passInput.value = '';
+                
+                let delayU = 200;
+                for (let i = 0; i < targetUser.length; i++) {
+                    const partialStr = targetUser.substring(0, i + 1);
+                    setTimeout(() => {
+                        userInput.value = partialStr;
+                        userInput.dispatchEvent(new Event('input'));
+                    }, delayU);
+                    delayU += 150;
+                }
+
+                let delayP = delayU + 300;
+                for (let i = 0; i < targetPass.length; i++) {
+                    const partialPass = targetPass.substring(0, i + 1);
+                    setTimeout(() => {
+                        passInput.value = partialPass;
+                        passInput.dispatchEvent(new Event('input'));
+                    }, delayP);
+                    delayP += 150;
+                }
+
+                setTimeout(() => { 
+                    submitBtn.click(); 
+                }, delayP + 300);
+
+            } else if (dropdownInput && checkboxInput && submitBtn2) {
+                // --- SIMULASI MODUL 2 (DROPDOWN & CHECKBOX) ---
+                const dropdownMatch = kodeSiswa.match(/#dropdown-input['",\s]+['"]([^'"]+)['"]/);
+                const targetVal = dropdownMatch ? dropdownMatch[1] : 'pro';
+
+                dropdownInput.value = '';
+                checkboxInput.checked = false;
+
+                setTimeout(() => {
+                    dropdownInput.value = targetVal;
+                    dropdownInput.dispatchEvent(new Event('change'));
+                }, 500);
+
+                setTimeout(() => {
+                    checkboxInput.checked = true;
+                    checkboxInput.dispatchEvent(new Event('change'));
+                }, 1200);
+
+                setTimeout(() => {
+                    submitBtn2.click();
+                }, 1800);
+            }
+        } catch (e) {
+            console.error("Gagal menjalankan simulasi visual iframe:", e);
+        }
+    }
+</script>
+{% endblock %}

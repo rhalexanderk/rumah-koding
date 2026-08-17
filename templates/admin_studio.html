@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Studio Admin - Rumah Koding{% endblock %}
+
+{% block extra_head %}
+<!-- Plugin CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<!-- Plugin JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+
+<style>
+    /* Prevent Scrolling */
+    body { overflow: hidden; }
+    
+    /* CodeMirror Override */
+    .CodeMirror { height: 100% !important; font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; background: transparent; }
+    
+    /* Modifikasi Quill JS agar senada dengan input Tailwind */
+    .ql-toolbar.ql-snow { background-color: #f8fafc; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; border-color: #cbd5e1 !important; }
+    .ql-container.ql-snow { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; border-color: #cbd5e1 !important; background-color: #ffffff; font-family: 'Inter', sans-serif !important; font-size: 14.5px !important; }
+    .ql-editor { min-height: 120px; color: #1e293b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="adminForm" class="flex flex-col h-[calc(100vh-5rem)] w-full bg-slate-900">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="materi_id" value="{{ materi.id if materi else '' }}">
+
+    <!-- Toolbar Atas Admin -->
+    <div class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50 px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex gap-3">
+            <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-emerald-500/20 transition-all">
+                💾 Simpan Modul
+            </button>
+            <a href="/admin" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/20 transition-all">
+                ➕ Modul Baru
+            </a>
+            <a href="/admin/users" class="flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition-all">
+                &larr; Keluar
+            </a>
+        </div>
+        <div class="flex items-center">
+            <span class="px-4 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-xs font-bold text-slate-300 uppercase tracking-widest">
+                Mode: {% if materi %}<span class="text-amber-400">Edit #{{ materi.id }}</span>{% else %}<span class="text-emerald-400">Tambah Baru</span>{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Layout Belah Layar (Split) -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Panel Kiri: Form & Editor Rich Text -->
+        <div class="w-[450px] lg:w-[500px] shrink-0 bg-slate-50 overflow-y-auto border-r border-slate-300 p-8 flex flex-col gap-6">
+            
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-extrabold text-xl text-slate-800 tracking-tight">Kreator Konten</span>
+                
+                <!-- Dropdown Daftar Modul -->
+                <div class="relative">
+                    <button type="button" id="btn-dropdown-modul" class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-lg shadow-md transition-colors">
+                        Daftar Modul <span class="text-[10px]">&#9660;</span>
+                    </button>
+                    <div id="box-dropdown-modul" class="hidden absolute right-0 top-full mt-2 w-72 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 p-2 max-h-72 overflow-y-auto">
+                        {% for m in daftar_materi %}
+                            <a href="/admin/{{ m.id }}" class="item-modul block px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors {% if materi and materi.id == m.id %}bg-blue-600/20 text-blue-400 border border-blue-500/30 font-semibold{% endif %}" data-bahasa="{{ m.bahasa | lower }}">
+                                Modul {{ m.modul_ke }}: {{ m.judul }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Dasar -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Judul Materi Singkat</label>
+                <input type="text" name="judul" value="{{ materi.judul if materi else '' }}" required placeholder="Contoh: 1. Konsep Variabel" 
+                       class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bahasa Pemrograman</label>
+                    <select name="bahasa" id="select-bahasa" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer shadow-sm">
+                        <option value="python" {% if materi and materi.bahasa | lower == 'python' %}selected{% endif %}>Python</option>
+                        <option value="java" {% if materi and materi.bahasa | lower == 'java' %}selected{% endif %}>Java</option>
+                        <option value="cpp" {% if materi and materi.bahasa | lower == 'cpp' %}selected{% endif %}>C++</option>
+                        <option value="javascript" {% if materi and materi.bahasa | lower == 'javascript' %}selected{% endif %}>JavaScript</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Urutan (Modul Ke-)</label>
+                    <input type="number" name="modul_ke" value="{{ materi.modul_ke if materi else '' }}" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm">
+                </div>
+            </div>
+
+            <!-- Quill Editors -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Penjelasan Materi Pembuka</label>
+                <div id="q-penjelasan"></div>
+                <input type="hidden" name="penjelasan" id="h-penjelasan">
+            </div>
+
+            <div class="pb-10">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Instruksi Tugas Siswa</label>
+                <div id="q-instruksi"></div>
+                <input type="hidden" name="instruksi" id="h-instruksi">
+            </div>
+        </div>
+
+        <!-- Panel Kanan: CodeMirror & Pengaturan Database -->
+        <div class="flex-1 flex flex-col bg-[#1e1e24] min-w-0">
+            
+            <!-- Code Editor Area -->
+            <div class="flex-1 flex flex-col min-h-0">
+                <div class="bg-[#121824] px-4 pt-3 flex border-b border-[#334155]">
+                    <div class="bg-[#1e1e24] text-blue-400 text-xs font-bold px-5 py-2.5 rounded-t-lg border-t border-x border-[#334155] tracking-wide flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        Template Kode Awal (Boilerplate)
+                    </div>
+                </div>
+                <!-- Box Textarea CodeMirror -->
+                <div class="flex-1 overflow-hidden relative">
+                    <textarea id="kode-editor" name="kode_awal">{{ materi.kode_awal if materi else '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Konsol Bawah: Konfigurasi Core Database -->
+            <div class="h-1/3 min-h-[200px] bg-[#0b1120] border-t border-slate-700 flex flex-col">
+                <div class="bg-slate-900/80 px-6 py-3 border-b border-slate-800 flex justify-between items-center shrink-0">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        ⚙️ Konfigurasi Validasi & Logika Flow
+                    </span>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Target Output Terminal (Kunci Jawaban Tepat)</label>
+                        <input type="text" name="jawaban_benar" value="{{ materi.jawaban_benar if materi else '' }}" required placeholder="Contoh teks output di konsol..." 
+                               class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-emerald-400 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner">
+                    </div>
+                    
+                    <div class="md:col-span-1">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">ID Modul Selanjutnya</label>
+                        <input type="number" name="next_id" value="{{ materi.next_id if materi and materi.next_id is not none else '' }}" placeholder="Opsional (Isi ID Angka)" 
+                               class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner">
+                    </div>
+
+                    {% if materi %}
+                    <div class="md:col-span-3 pt-2 border-t border-slate-800">
+                        <a href="/admin/hapus/{{ materi.id }}" onclick="return confirm('Tindakan ini tidak bisa dibatalkan! Yakin ingin menghapus modul ini secara permanen dari database?')" class="inline-flex items-center gap-2 px-5 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white font-bold text-xs uppercase tracking-wider rounded-lg border border-rose-500/30 transition-all">
+                            🗑️ Hapus Modul Secara Permanen
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    // Logika Dropdown Modul
+    const btnDropdown = document.getElementById("btn-dropdown-modul");
+    const boxDropdown = document.getElementById("box-dropdown-modul");
+    
+    if (btnDropdown && boxDropdown) {
+        btnDropdown.addEventListener("click", (e) => {
+            e.stopPropagation();
+            boxDropdown.classList.toggle("hidden");
+        });
+        window.addEventListener("click", () => {
+            if (!boxDropdown.classList.contains("hidden")) { boxDropdown.classList.add("hidden"); }
+        });
+    }
+
+    // Inisialisasi Environment
+    document.addEventListener("DOMContentLoaded", function() {
+        const editor = CodeMirror.fromTextArea(document.getElementById("kode-editor"), {
+            mode: "python", theme: "dracula", lineNumbers: true, indentUnit: 4, lineWrapping: true
+        });
+
+        const toolbarOptions = [['bold', 'italic'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['code-block']];
+        const q1 = new Quill('#q-penjelasan', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+        const q2 = new Quill('#q-instruksi', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+
+        // Pengisian Data dari DB
+        {% if materi %}
+        q1.root.innerHTML = {{ materi.penjelasan | tojson | safe }};
+        q2.root.innerHTML = {{ materi.instruksi | tojson | safe }};
+        {% endif %}
+
+        // Intercept Submit
+        const adminForm = document.getElementById('adminForm');
+        if (adminForm) {
+            adminForm.onsubmit = function() {
+                document.getElementById('h-penjelasan').value = q1.root.innerHTML;
+                document.getElementById('h-instruksi').value = q2.root.innerHTML;
+                editor.save(); 
+            };
+        }
+
+        // Logic Filter Bahasa otomatis dari Memory
+        const selectBahasa = document.getElementById("select-bahasa");
+        const itemsModul = document.querySelectorAll(".item-modul");
+
+        {% if not materi %}
+        const savedLang = localStorage.getItem("admin_last_bahasa");
+        if (savedLang && selectBahasa) { selectBahasa.value = savedLang; }
+        {% endif %}
+
+        function filterModul() {
+            if (!selectBahasa) return;
+            const activeLang = selectBahasa.value.toLowerCase().trim();
+            localStorage.setItem("admin_last_bahasa", activeLang); // Simpan pilihan terbaru
+            
+            itemsModul.forEach(item => {
+                if (item.getAttribute("data-bahasa").toLowerCase().trim() === activeLang) {
+                    item.classList.remove("hidden");
+                } else {
+                    item.classList.add("hidden");
+                }
+            });
+        }
+        
+        filterModul();
+        if (selectBahasa) selectBahasa.addEventListener("change", filterModul);
+    });
+</script>
+{% endblock %}

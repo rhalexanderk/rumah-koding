@@ -1,0 +1,84 @@
+/* ==========================================
+   RUMAH KODING - MASTER CUSTOM CSS
+   ========================================== */
+
+/* Pengaturan Dasar & Animasi Global */
+body {
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Efek Navbar Glassmorphism */
+.glass-nav {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease-in-out;
+}
+
+/* CodeMirror Editor Kustom */
+.CodeMirror {
+    height: 100% !important;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    background: transparent;
+}
+
+/* Komponen Kelas Kustom (Fallback agar desain lama hidup kembali) */
+.admin-container { 
+    max-width: 1100px; 
+    margin: 40px auto; 
+    padding: 0 20px; 
+}
+
+.form-card { 
+    background-color: #1e293b; 
+    border: 1px solid #334155; 
+    border-radius: 12px; 
+    padding: 30px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+    margin-bottom: 30px; 
+}
+
+.table-box { 
+    background-color: #1e293b; 
+    border: 1px solid #334155; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+}
+
+/* Animasi & Transisi Halus */
+button, a, input, select {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Custom Scrollbar ala IDE Modern */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0b1120;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+#q-penjelasan, #q-instruksi {
+    position: relative;
+    z-index: 1;
+}
+.ql-container.ql-snow {
+    min-height: 120px;
+    height: auto;
+}
